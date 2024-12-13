@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIITDM - Attendance Viewer</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: fit-content;
+            max-width: 90%;
+        }
+        h1 {
+            text-align: left;
+            color: white;
+        }
+        form {
+            display: flex;
+            justify-content: left;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #009879;
+            background-color: #272727;
+            color: white;
+            border-radius: 15px;
+            margin-right: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3e3e3e;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #575757;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate; 
+            border-spacing: 0;         
+            margin-top: 20px;
+            border-radius: 15px;       
+            overflow: hidden;
+            box-shadow: 0 0 18px 18px rgba(62, 62, 62, 0.2); 
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #009879;
+            color: white;
+        }
+        tr {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        tr:nth-child(even) {
+            background-color: #3e3e3e;
+        }
+        tr:hover {
+            background-color: #575757;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IIITDM Kancheepuram - Attendance Viewer</h1>
+        <form id="attendanceForm">
+            <input type="text" id="rollNumber" name="rollNumber" placeholder="Enter Roll Number" required>
+            <button type="submit">Submit</button>
+        </form>
+        <table id="attendanceTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Course ID</th>
+                    <th>Course Name</th>
+                    <th>Faculty Name</th>
+                    <th>Total</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>No Class</th>
+                    <th>Provisional Approved Leave</th>
+                    <th>Present %</th>
+                    <th>Absent %</th>
+                    <th>Approved Leave %</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('attendanceForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const rollNumber = document.getElementById('rollNumber').value;
+
+            fetch(`/attendance?roll_no=${rollNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('attendanceTable');
+                    const tbody = table.querySelector('tbody');
+
+                    tbody.innerHTML = '';
+
+                    data.forEach((subject, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${subject.course_id}</td>
+                            <td>${subject.course_name}</td>
+                            <td>${subject.faculty_name}</td>
+                            <td>${subject.total}</td>
+                            <td>${subject.present}</td>
+                            <td>${subject.absent}</td>
+                            <td>${subject.no_class}</td>
+                            <td>${subject.provisional_approved_leave}</td>
+                            <td>${subject.present_percentage}</td>
+                            <td>${subject.absent_percentage}</td>
+                            <td>${subject.approved_leave_percentage}</td>
+                            <td>${subject.percentage}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    table.style.display = 'table';
+                })
+                .catch(error => {
+                    alert('Error fetching attendance data. Please try again.');
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
