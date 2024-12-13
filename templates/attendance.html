@@ -119,14 +119,22 @@
             event.preventDefault();
             const rollNumber = document.getElementById('rollNumber').value;
 
+            // Clear any existing data in the table
+            const table = document.getElementById('attendanceTable');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            table.style.display = 'none';
+
+            // Fetch attendance data
             fetch(`/attendance?roll_no=${rollNumber}`)
                 .then(response => response.json())
                 .then(data => {
-                    const table = document.getElementById('attendanceTable');
-                    const tbody = table.querySelector('tbody');
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
 
-                    tbody.innerHTML = '';
-
+                    // Populate the table with the data
                     data.forEach((subject, index) => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
