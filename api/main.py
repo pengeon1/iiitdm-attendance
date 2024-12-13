@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from bs4 import BeautifulSoup
 import requests
+import traceback
 
 app = Flask(__name__)
 
@@ -12,11 +13,15 @@ def home():
 def fetch_attendance():
     roll_no = request.args.get('roll_no')
 
-    # Replace with the actual URL you use for scraping
+    if not roll_no:
+        return jsonify({"error": "Missing roll number parameter"}), 400
+
     url = f"https://mis.iiitdm.ac.in/Profile/automation/ajax/ajax.php?method=StudSubject123&RegTable=reg_jul_nov_2024&StudentID={roll_no}"
 
     try:
         req = requests.get(url)
+        req.raise_for_status()  # Raises HTTPError if the HTTP request returned an unsuccessful status code
+
         soup = BeautifulSoup(req.text, "html.parser")
 
         # Extract table rows
@@ -43,5 +48,18 @@ def fetch_attendance():
 
         return jsonify(all_subs)
 
+    except requests.exceptions.RequestException as e:
+        # Catch HTTP request errors
+        error_message = f"Failed to fetch data from the server: {e}"
+        print(error_message)  # This will show in Vercel logs
+        return jsonify({"error": error_message}), 500
+
     except Exception as e:
-        return jsonify({"error": "Failed to fetch attendance data.", "details": str(e)})
+        # Catch any other general exceptions
+        error_message = f"An unexpected error occurred: {str(e)}"
+        print(error_message)  # This will show in Vercel logs
+        print(traceback.format_exc())  # Print stack trace for better debugging
+        return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
