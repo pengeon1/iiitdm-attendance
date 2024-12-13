@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from bs4 import BeautifulSoup
 import requests
+import math
 
 app = Flask(__name__)
 
@@ -11,19 +12,15 @@ def home():
 @app.route('/attendance', methods=['GET'])
 def fetch_attendance():
     roll_no = request.args.get('roll_no')
-
-    # Replace with the actual URL you use for scraping
     url = f"https://mis.iiitdm.ac.in/Profile/automation/ajax/ajax.php?method=StudSubject123&RegTable=reg_jul_nov_2024&StudentID={roll_no}"
 
     try:
         req = requests.get(url)
         soup = BeautifulSoup(req.text, "html.parser")
-
-        # Extract table rows
         all_subs = []
         for row in soup.find_all('tr'):
             cols = row.find_all('td')
-            if cols:  # Skip empty rows
+            if cols:
                 subject = {
                     "sno": cols[0].text.strip(),
                     "course_id": cols[1].text.strip(),
@@ -39,6 +36,10 @@ def fetch_attendance():
                     "approved_leave_percentage": cols[11].text.strip(),
                     "percentage": cols[12].text.strip()
                 }
+                if subject["total"] and subject["absent"] and subject["provisional_approved_leave"]:
+                    subject["miss"]=str(math.floor((int(subject["present"])+int(subject["provisional_approved_leave"]))/0.85-int(subject["total"])))
+                else:
+                    subject["miss"]="N/A"
                 all_subs.append(subject)
 
         return jsonify(all_subs)
