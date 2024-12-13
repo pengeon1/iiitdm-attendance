@@ -1,66 +1,159 @@
-from flask import Flask, render_template, request, jsonify
-from bs4 import BeautifulSoup
-import requests
-
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return render_template('attendance.html')
-
-@app.route('/attendance', methods=['GET'])
-def fetch_attendance():
-    roll_no = request.args.get('roll_no')
-    
-    if not roll_no:
-        return jsonify({"error": "Missing roll number parameter"}), 400
-
-    url = f"https://mis.iiitdm.ac.in/Profile/automation/ajax/ajax.php?method=StudSubject123&RegTable=reg_jul_nov_2024&StudentID={roll_no}"
-
-    try:
-        # Adding headers to mimic a browser request to prevent potential blocking
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIITDM - Attendance Viewer</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        
-        # Make the request
-        req = requests.get(url, headers=headers, timeout=10)
-        req.raise_for_status()  # Raise an error for bad HTTP status codes
-        
-        soup = BeautifulSoup(req.text, "html.parser")
+        .container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: fit-content;
+            max-width: 90%;
+        }
+        h1 {
+            text-align: left;
+            color: white;
+        }
+        form {
+            display: flex;
+            justify-content: left;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #009879;
+            background-color: #272727;
+            color: white;
+            border-radius: 15px;
+            margin-right: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3e3e3e;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #575757;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate; 
+            border-spacing: 0;         
+            margin-top: 20px;
+            border-radius: 15px;       
+            overflow: hidden;
+            box-shadow: 0 0 18px 18px rgba(62, 62, 62, 0.2); 
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #009879;
+            color: white;
+        }
+        tr {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        tr:nth-child(even) {
+            background-color: #3e3e3e;
+        }
+        tr:hover {
+            background-color: #575757;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IIITDM Kancheepuram - Attendance Viewer</h1>
+        <form id="attendanceForm">
+            <input type="text" id="rollNumber" name="rollNumber" placeholder="Enter Roll Number" required>
+            <button type="submit">Submit</button>
+        </form>
+        <table id="attendanceTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Course ID</th>
+                    <th>Course Name</th>
+                    <th>Faculty Name</th>
+                    <th>Total</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>No Class</th>
+                    <th>Provisional Approved Leave</th>
+                    <th>Present %</th>
+                    <th>Absent %</th>
+                    <th>Approved Leave %</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 
-        all_subs = []
-        for row in soup.find_all('tr'):
-            cols = row.find_all('td')
-            if cols:  # Skip empty rows
-                subject = {
-                    "sno": cols[0].text.strip(),
-                    "course_id": cols[1].text.strip(),
-                    "course_name": cols[2].text.strip(),
-                    "faculty_name": cols[3].text.strip(),
-                    "total": cols[4].text.strip(),
-                    "present": cols[5].text.strip(),
-                    "absent": cols[6].text.strip(),
-                    "no_class": cols[7].text.strip(),
-                    "provisional_approved_leave": cols[8].text.strip(),
-                    "present_percentage": cols[9].text.strip(),
-                    "absent_percentage": cols[10].text.strip(),
-                    "approved_leave_percentage": cols[11].text.strip(),
-                    "percentage": cols[12].text.strip()
-                }
-                all_subs.append(subject)
+    <script>
+        document.getElementById('attendanceForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const rollNumber = document.getElementById('rollNumber').value;
 
-        return jsonify(all_subs)
+            fetch(`/attendance?roll_no=${rollNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('attendanceTable');
+                    const tbody = table.querySelector('tbody');
 
-    except requests.exceptions.RequestException as e:
-        error_message = f"Failed to fetch data from the server: {e}"
-        print(f"Error: {error_message}")
-        return jsonify({"error": error_message}), 500
+                    tbody.innerHTML = '';
 
-    except Exception as e:
-        error_message = f"An unexpected error occurred: {str(e)}"
-        print(f"Unexpected Error: {error_message}")
-        return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+                    data.forEach((subject, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${subject.course_id}</td>
+                            <td>${subject.course_name}</td>
+                            <td>${subject.faculty_name}</td>
+                            <td>${subject.total}</td>
+                            <td>${subject.present}</td>
+                            <td>${subject.absent}</td>
+                            <td>${subject.no_class}</td>
+                            <td>${subject.provisional_approved_leave}</td>
+                            <td>${subject.present_percentage}</td>
+                            <td>${subject.absent_percentage}</td>
+                            <td>${subject.approved_leave_percentage}</td>
+                            <td>${subject.percentage}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
 
-if __name__ == '__main__':
-    app.run(debug=True)
+                    table.style.display = 'table';
+                })
+                .catch(error => {
+                    alert('Error fetching attendance data. Please try again.');
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
