@@ -45,6 +45,3 @@ def fetch_attendance():
 
     except Exception as e:
         return jsonify({"error": "Failed to fetch attendance data.", "details": str(e)})
-
-if __name__ == '__main__':
-    app.run(debug=True)
