@@ -8,7 +8,7 @@
         body {
             position: absolute;
             font-family: 'Poppins', sans-serif;
-            margin: 10px;
+            margin: 0;
             padding: 0;
             background-color: #121212;
             color: white;
@@ -107,6 +107,7 @@
                     <th>Absent %</th>
                     <th>Approved Leave %</th>
                     <th>Percentage</th>
+                    <th>Buffer Class Number</th>
                 </tr>
             </thead>
             <tbody>
@@ -143,6 +144,7 @@
                             <td>${subject.absent_percentage}</td>
                             <td>${subject.approved_leave_percentage}</td>
                             <td>${subject.percentage}</td>
+                            <td>${subject.miss}</td>
                         `;
                         tbody.appendChild(row);
                     });
