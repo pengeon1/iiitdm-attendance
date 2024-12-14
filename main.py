@@ -37,7 +37,7 @@ def fetch_attendance():
                     "percentage": cols[12].text.strip()
                 }
                 if subject["total"] and subject["absent"] and subject["provisional_approved_leave"]:
-                    subject["miss"]=str(math.floor((int(subject["present"])+int(subject["provisional_approved_leave"]))/0.85-int(subject["total"])))
+                    subject["miss"]=str(math.floor((int(subject["present"])+int(subject["provisional_approved_leave"]))/0.84-int(subject["total"])))
                 else:
                     subject["miss"]="N/A"
                 all_subs.append(subject)
